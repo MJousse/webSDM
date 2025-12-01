@@ -1,46 +1,104 @@
 #' Fitting a trophic Species distribution model
 #'
-#' trophicSDM is used to fit a trophic species distribution model. Requires the species distribution data Y (the sites x species matrix), explanatory variables X and a directed acyclic graph G containing species interactions (i.e., the metaweb, with links going from predators to prey). The function fits the distribution of each species as a function of their preys (with mode = "prey", by default) or predators (if set mode = "predator").
-#' @param Y The sites x species matrix containing observed species distribution (e.g. presence-absence).
-#' @param X The design matrix, i.e. sites x predictor matrix containing the value of each explanatory variable (e.g. the environmental conditions) at each site.
-#' @param G The species interaction network (aka metaweb). Needs to be an igraph object. Links must go from predator to preys. It needs to be a directed acyclic graph.
-#' @param env.formula The definition of the abiotic part of the model. It can be :
+#' trophicSDM is used to fit a trophic species distribution model. Requires the 
+#' species distribution data Y (the sites x species matrix), explanatory 
+#' variables X and a directed acyclic graph G containing species interactions 
+#' (i.e., the metaweb, with links going from predators to prey). The function 
+#' fits the distribution of each species as a function of their preys (with 
+#' mode = "prey", by default) or predators (if set mode = "predator").
+#' @param Y The sites x species matrix containing observed species distribution
+#'  (e.g. presence-absence).
+#' @param X The design matrix, i.e. sites x predictor matrix containing the 
+#' value of each explanatory variable (e.g. the environmental conditions) at 
+#' each site.
+#' @param G The species interaction network (aka metaweb). Needs to be an igraph 
+#' object. Links must go from predator to preys. It needs to be a directed 
+#' acyclic graph.
+#' @param env.formula The definition of the abiotic part of the model. It can 
+#' be :
 #' \itemize{
-#' \item a string specifying the formula (e.g. "~ X_1 + X_2"). In this case, the same environmental variables are used for every species.
-#' 
-#' \item A list that contains for each species the formula that describes the abiotic part of the model. In this case, different species can be modeled as a function of different environmental covariates. The names of the list must coincide with the names of the species.
+#' \item a string specifying the formula (e.g. "~ X_1 + X_2"). In this case, the 
+#' same environmental variables are used for every species.
+#' \item A list that contains for each species the formula that describes the 
+#' abiotic part of the model. In this case, different species can be modeled as 
+#' a function of different environmental covariates. The names of the list must 
+#' coincide with the names of the species.
 #' }
-#' @param method which SDM method to use. For now the available choices are: \code{"glm"} (frequentist) or \code{"stan_glm"} (full bayesian MCMC, default). Notice that using "glm" does not allow error propagation when predicting.
-#' @param mode  "prey" if bottom-up control (default), "predators" otherwise. Notice that G needs to be such that links point from predators to prey.
-#' @param family the family parameter of the glm function (see \code{glm}). \code{gaussian(link = "identity")} for gaussian data. \code{binomial(link = "logit")} or \code{binomial(link = "probit")} for presence-absence data.
-#' @param iter (for \code{"stan_glm"} only) Number of iterations for each MCMC chain if stan_glm is used
-#' @param chains (for \code{"stan_glm"} only) Number of MCMC chains (default to 2)
-#' @param penal Penalisation method to shrink regression coefficients. If \code{NULL} (default), the model does not penalise the regression coefficient. For now, available penalization method are  \code{"horshoe"} for method stan_glm, \code{"elasticnet"} for method glm. It is also possible to constrain the sign of biotic coefficients (prey coefficients are set to positive and predator coefficients to negative) by setting \code{"coeff.signs"} for methods glm and stan_glm.
-#' @param sp.formula (optional) It allows to specify a particular definition of the biotic part of the model, e.g., using composite variables (e.g., richness), or an interaction of the biotic and abitic component. More details in 'Details'.
-#' @param sp.partition (optional) a list to specify groups of species that are used to compute composite variables, e.g., a species can be modeled as a function of the richness of each group of preys. It has to be a list, each element is a vector containing the names of species in the group. More details in 'Details'.
-#' @param run.parallel Whether species models are fitted in parallel (can speed computational up time). Default to \code{FALSE}.
+#' @param method which SDM method to use. For now the available choices are: 
+#' \code{"glm"} (frequentist) or \code{"stan_glm"} (full bayesian MCMC, 
+#' default). Notice that using "glm" does not allow error propagation when 
+#' predicting.
+#' @param mode  "prey" if bottom-up control (default), "predators" otherwise. 
+#' Notice that G needs to be such that links point from predators to prey.
+#' @param family the family parameter of the glm function (see \code{glm}). 
+#' \code{gaussian(link = "identity")} for gaussian data. 
+#' \code{binomial(link = "logit")} or \code{binomial(link = "probit")} for 
+#' presence-absence data.
+#' @param iter (for \code{"stan_glm"} only) Number of iterations for each MCMC 
+#' chain if stan_glm is used
+#' @param chains (for \code{"stan_glm"} only) Number of MCMC chains (default to
+#'  2)
+#' @param penal Penalisation method to shrink regression coefficients. If 
+#' \code{NULL} (default), the model does not penalise the regression coefficient. 
+#' For now, available penalization method are  \code{"horshoe"} for method 
+#' stan_glm, \code{"elasticnet"} for method glm. It is also possible to 
+#' constrain the sign of biotic coefficients (prey coefficients are set to 
+#' positive and predator coefficients to negative) by setting 
+#' \code{"coeff.signs"} for methods glm and stan_glm.
+#' @param sp.formula (optional) It allows to specify a particular definition of 
+#' the biotic part of the model, e.g., using composite variables (e.g., 
+#' richness), or an interaction of the biotic and abitic component. More details 
+#' in 'Details'.
+#' @param sp.partition (optional) a list to specify groups of species that are 
+#' used to compute composite variables, e.g., a species can be modeled as a 
+#' function of the richness of each group of preys. It has to be a list, each 
+#' element is a vector containing the names of species in the group. More 
+#' details in 'Details'.
+#' @param run.parallel Whether species models are fitted in parallel (can speed 
+#' computational up time). Default to \code{FALSE}.
 #' @param verbose Whether to print algorithm progresses
 #' @return A "trophicSDMfit" object, containing:
-#'    \item{model}{A list containing the local models (i.e. a SDM for each species). Each local model is an object of class "SDMfit". See \code{?SDMfit} for more informations.}
+#'    \item{model}{A list containing the local models (i.e. a SDM for each 
+#'    species). Each local model is an object of class "SDMfit". See 
+#'    \code{?SDMfit} for more informations.}
+#'    
 #'    \item{Y}{A numeric vector of standard errors on parameters}
 #'
-#'    \item{form.all}{A list describing each species formula (both biotic and abiotic terms)}
+#'    \item{form.all}{A list describing each species formula (both biotic and 
+#'    abiotic terms)}
 #'
 #'    \item{data}{A list containing all the data used to fit the model}
 #'
-#'    \item{model.call}{A list containing the modeling choices of the fitted model (e.g. method, penalisation...)}
+#'    \item{model.call}{A list containing the modeling choices of the 
+#'    fitted model (e.g. method, penalisation...)}
 #'
-#'    \item{coef}{A list containing, for each species, the inferred coefficients (with credible intervals or p-values when available)}
+#'    \item{coef}{A list containing, for each species, the inferred coefficients 
+#'    (with credible intervals or p-values when available)}
+#'    
 #'    \item{MCMC.diag}{MCMC convergence metrics, only available for MCMC methods}
 #'
 #'    \item{AIC}{Model's AIC}
 #'
 #'    \item{log.lik}{Model's log.likelihood}
 #'
-#' @details "sp.formula" and "sp.partition" can be combined to define any kind of composite variables for the biotic part of the formula. "sp.formula" can be :
+#' @details "sp.formula" and "sp.partition" can be combined to define any kind
+#'  of composite variables for the biotic part of the formula. "sp.formula" can 
+#'  be :
 #' \itemize{
-#' \item A string defining a formula as function of "richness", e.g., \code{"richness+I(richness)^2"} (species are modeled as a function of a quadratic polynomial of their prey richness), \code{"I(richness>0)"} (species are modeled as a function of a dummy variable that is equal to 1 when at least one species is present). Importantly, when group of preys (or predators) are specified by "sp.partition", species are modeled as a function of the composite variable specified by "sp.formula" for each of their prey (or predator) groups.
-#'  \item A more flexible option is to specify sp.formula as a list (whose names are species' names) that contains for each species the definition of the biotic part of the model. Notice that, in this case, the function does not check that the model is a DAG. This allow to define any kind of composite variable, or to model interactions between environmental covariates and preys (or predators).
+#' \item A string defining a formula as function of "richness", e.g., 
+#' \code{"richness+I(richness)^2"} (species are modeled as a function of a 
+#' quadratic polynomial of their prey richness), \code{"I(richness>0)"} (species 
+#' are modeled as a function of a dummy variable that is equal to 1 when at 
+#' least one species is present). Importantly, when group of preys (or 
+#' predators) are specified by "sp.partition", species are modeled as a function 
+#' of the composite variable specified by "sp.formula" for each of their prey 
+#' (or predator) groups.
+#'  \item A more flexible option is to specify sp.formula as a list (whose names 
+#'  are species' names) that contains for each species the definition of the 
+#'  biotic part of the model. Notice that, in this case, the function does not 
+#'  check that the model is a DAG. This allow to define any kind of composite 
+#'  variable, or to model interactions between environmental covariates and 
+#'  preys (or predators).
 #'}
 #' @author Giovanni Poggiato and Jérémy Andréoletti
 #' @examples
@@ -159,13 +217,14 @@ trophicSDM = function(Y, X, G,
 
   ################################
   # Laplacian sorting of the graph (component by component)
-
+  # assumes prey -> prey
+  
   if(mode == "prey"){
     #sortedV = igraph::V(G)[order(unlist(lapply(igraph::decompose(G), compute_TL_laplacian)), decreasing=T)]
-    sortedV = topological.sort(G, mode = "in")
+    sortedV = igraph::topological.sort(G, mode = "in")
   }else{
     #sortedV = igraph::V(G)[order(unlist(lapply(igraph::decompose(G), compute_TL_laplacian)), decreasing=F)]
-    sortedV = topological.sort(G, mode = "out")
+    sortedV = igraph::topological.sort(G, mode = "out")
     
   }
 
@@ -241,7 +300,7 @@ trophicSDM = function(Y, X, G,
 
   trophicSDMfit$log.lik = do.call(sum, lapply(trophicSDMfit$model, function(x) x$log.lik))
 
-  if(method == "stan_glm"){
+  if(method == "stan_glm"){ #                                                   I BELIEVE THIS USES BRMS AND MAY FAIL IF RSTANNORM IS USED.
     mcmc.diag = data.frame(rhat = unlist(lapply(
       trophicSDMfit$model, function(x) rhat(x$model))),
       neff.ratio = unlist(lapply(

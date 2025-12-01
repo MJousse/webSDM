@@ -1,6 +1,8 @@
 #' Builds SDM formulae
 #'
-#' Builds the formula of both the abiotic and biotic terms to fit a single species SDM based on the input parameters. The function is called inside the SDMfit function
+#' Builds the formula of both the abiotic and biotic terms to fit a single 
+#' species SDM based on the input parameters. The function is called inside the 
+#' SDMfit function
 #' @param form.init The abiotic part of the formula
 #' @param species The preys (or predators) of the focal species
 #' @param sp.formula optional parameter for composite variables. See ?trophicSDM

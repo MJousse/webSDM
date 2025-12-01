@@ -77,9 +77,9 @@ SDMfit = function(focal, Y, X, G, formula.foc, sp.formula = NULL, sp.partition =
   ## Build final formula
   neigh = names(neighbors(G,focal,mode=ifelse(mode=="prey","out","in")))
 
-  data = data.frame(X,Y)
+  data = data.frame(X,Y)  
   data = dplyr::rename(data,y=all_of(focal))  # rename the focal column to be called "y"
-
+  
   ### Include neigh as covariates
   if (length(neigh)>0){
     formulas = buildFormula(form.init=form.env,
@@ -119,7 +119,8 @@ SDMfit = function(focal, Y, X, G, formula.foc, sp.formula = NULL, sp.partition =
       # intermediary species variables are themselves defined from observed species variables
       form.neigh.brms = formulas$form.brms
     }
-  }else{
+    
+  }else{ #this is if no neighbors
     # the focal species is basal
     form.all = as.character(form.env)
   }
