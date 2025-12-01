@@ -77,7 +77,7 @@ SDMfit = function(focal, Y, X, G, formula.foc, sp.formula = NULL, sp.partition =
   ## Build final formula
   neigh = names(neighbors(G,focal,mode=ifelse(mode=="prey","out","in")))
 
-  data = data.frame(X,Y)
+  data = data.frame(X,Y, check.names = F) #need check.names = F otherwise forces "." on species names
   data = dplyr::rename(data,y=all_of(focal))  # rename the focal column to be called "y"
 
   ### Include neigh as covariates
